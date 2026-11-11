@@ -1,0 +1,15 @@
+[project]
+name = "assistant-sidecar"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "mss>=6.1.0",
+    "pyautogui>=0.9.54",
+    "pywin32>=306",
+    "pytesseract>=0.3.10",
+    "requests>=2.31.0",
+    "Pillow>=10.0.0",
+]
+
+[tool.uv]
+no-dev = true
