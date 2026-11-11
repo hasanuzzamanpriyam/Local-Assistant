@@ -61,6 +61,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::model::model_health,
             commands::model::model_list,
+            commands::model::model_scan_local,
+            commands::model::model_set_default,
             commands::model::model_chat,
             commands::model::model_chat_stream,
             commands::model::model_start,
