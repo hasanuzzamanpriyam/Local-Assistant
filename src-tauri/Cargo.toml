@@ -26,3 +26,5 @@ toml = "0.8"
 notify = "6.1"
 portpicker = "0.1"
 uuid = { version = "1.7", features = ["v4", "serde"] }
+futures = "0.3"
+bytes = "1.5"
