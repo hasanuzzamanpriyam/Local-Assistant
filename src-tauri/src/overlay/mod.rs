@@ -38,8 +38,8 @@ impl OverlayManager {
         *self.window.lock().unwrap() = window;
     }
 
-    pub fn set_shortcut(&self, shortcut: GlobalShortcut) {
-        *self.shortcut = shortcut;
+    pub fn set_shortcut(&mut self, shortcut: GlobalShortcut) {
+        self.shortcut = Arc::new(shortcut);
     }
 
     pub fn show(&self) -> Result<()> {
@@ -76,7 +76,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_overlay_manager_creates {
+    fn test_overlay_manager_creates() {
         let manager = OverlayManager::new();
         assert!(!manager.is_visible());
     }

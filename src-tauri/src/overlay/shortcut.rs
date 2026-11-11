@@ -1,5 +1,5 @@
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutManager};
-use tauri::{AppHandle, Manager};
+use tauri_plugin_global_shortcut::GlobalShortcutExt;
+use tauri::AppHandle;
 use anyhow::Result;
 use std::sync::{Arc, Mutex};
 
@@ -21,11 +21,11 @@ impl GlobalShortcut {
     }
 
     pub fn register(&self, app_handle: &AppHandle) -> Result<()> {
-        let handler = self.handler.lock().unwrap().clone();
+        let handler = Arc::clone(&self.handler);
         let shortcut_manager = app_handle.global_shortcut();
 
-        shortcut_manager.register("Ctrl+Alt+Esc", move |_event, _win| {
-            if let Some(ref h) = handler {
+        shortcut_manager.on_shortcut("Ctrl+Alt+Esc", move |_app, _shortcut, _event| {
+            if let Some(ref h) = *handler.lock().unwrap() {
                 h();
             }
         })?;

@@ -1,6 +1,7 @@
 mod config;
 mod model;
 mod commands;
+mod overlay;
 mod sidecar;
 
 use std::sync::Arc;

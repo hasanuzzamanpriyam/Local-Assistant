@@ -7,7 +7,7 @@ pub struct OverlayWindow {
 
 impl OverlayWindow {
     pub fn new(app_handle: &AppHandle) -> Result<Self> {
-        let window = WebviewWindowBuilder::new(app_handle, "overlay", tauri::WebviewWindowUrl::App("/overlay.html".into()))
+        let window = WebviewWindowBuilder::new(app_handle, "overlay", tauri::WebviewUrl::App("/overlay.html".into()))
             .title("Assistant Overlay")
             .inner_size(1920.0, 1080.0)
             .resizable(false)
@@ -15,7 +15,7 @@ impl OverlayWindow {
             .transparent(true)
             .always_on_top(true)
             .skip_taskbar(true)
-            .focus(false)
+            .focus()
             .visible(false)
             .build()?;
 
@@ -25,7 +25,7 @@ impl OverlayWindow {
     pub fn show(&self) -> Result<()> {
         if let Some(ref window) = self.window {
             window.show()?;
-            window.set_focus(false)?;
+            window.set_focus()?;
         }
         Ok(())
     }
@@ -38,7 +38,10 @@ impl OverlayWindow {
     }
 
     pub fn is_visible(&self) -> bool {
-        self.window.as_ref().map(|w| w.is_visible()).unwrap_or(false)
+        self.window
+            .as_ref()
+            .map(|w| w.is_visible().unwrap_or(false))
+            .unwrap_or(false)
     }
 }
 
