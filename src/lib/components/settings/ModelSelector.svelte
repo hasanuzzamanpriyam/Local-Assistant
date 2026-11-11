@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { allModels } from '../../stores/settings';
+  import { allModels, localModels, remoteModels } from '../../stores/settings';
   import { modelScanLocal, modelSetDefault } from '../../api/llama';
   import { onMount } from 'svelte';
 
@@ -13,8 +13,8 @@
     error = null;
     try {
       const result = await modelScanLocal();
-      // The stores are updated by the scan command result - we just trigger a refresh
-      // The derived store will pick up the changes
+      localModels.set(result.local);
+      remoteModels.set(result.remote);
     } catch (e) {
       error = e instanceof Error ? e.message : 'Failed to scan models';
       console.error('Model scan failed:', e);

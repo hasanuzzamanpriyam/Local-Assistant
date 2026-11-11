@@ -3,22 +3,17 @@
   import Message from './Message.svelte';
   import MessageInput from './MessageInput.svelte';
   import { chatStore, sendMessage } from '../../stores/chat';
+  import { settingsStore } from '../../stores/settings';
 
   let messagesContainer: HTMLDivElement | null = null;
   let isAutoScroll = $state(true);
   let systemPrompt = $state('');
 
-  // Load system prompt from settings
-  async function loadSystemPrompt() {
-    try {
-      const stored = localStorage.getItem('assistant_settings');
-      if (stored) {
-        const settings = JSON.parse(stored);
-        systemPrompt = settings.systemPrompt || '';
-      }
-    } catch (e) {
-      console.error('Failed to load system prompt:', e);
-    }
+  // Load system prompt from settings store
+  function loadSystemPrompt() {
+    settingsStore.subscribe((s) => {
+      systemPrompt = s.systemPrompt || '';
+    })();
   }
 
   function scrollToBottom() {

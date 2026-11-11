@@ -3,6 +3,7 @@ import type { ChatMessage, ToolCall, ChatCompletionRequest, ChatCompletionChunk 
 import { modelChatStream } from '../api/llama';
 import { fsRead, fsWrite, fsEdit, fsGlob, fsGrep } from '../api/fs';
 import { shellExec } from '../api/shell';
+import { settingsStore } from './settings';
 
 const STORAGE_KEY = 'assistant_chat_history';
 const MAX_MESSAGES = 100;
@@ -285,7 +286,11 @@ export async function executeToolCall(toolCall: ToolCall): Promise<ToolResult> {
 }
 
 // Send a message and handle streaming response with tool execution loop
-export async function sendMessage(content: string, systemPrompt: string = '') {
+export async function sendMessage(content: string, systemPrompt?: string) {
+  // Resolve settings (use provided systemPrompt, fall back to store)
+  let settings: any = {};
+  settingsStore.subscribe((s) => { settings = s; })();
+
   // Add user message
   const userMessage = chatStore.addMessage({
     role: 'user',
@@ -302,19 +307,21 @@ export async function sendMessage(content: string, systemPrompt: string = '') {
   // Prepare messages for LLM
   const messages = chatStore.getLLMMessages();
   
-  // Add system prompt if provided
+  // Resolve system prompt: parameter > store > default
+  const resolvedSystemPrompt = systemPrompt ?? settings.systemPrompt ?? 'You are a helpful AI assistant.';
+  
   const requestMessages: ChatMessage[] = [];
-  if (systemPrompt) {
-    requestMessages.push({ role: 'system', content: systemPrompt });
+  if (resolvedSystemPrompt) {
+    requestMessages.push({ role: 'system', content: resolvedSystemPrompt });
   }
   requestMessages.push(...messages);
 
   const request: ChatCompletionRequest = {
-    model: 'default',
+    model: settings.model || 'default',
     messages: requestMessages,
-    temperature: 0.3,
-    top_p: 0.9,
-    max_tokens: 4096,
+    temperature: settings.temperature ?? 0.3,
+    top_p: settings.topP ?? 0.9,
+    max_tokens: settings.contextSize ?? 4096,
     stream: true,
     tools: availableTools,
     tool_choice: 'auto',
@@ -402,7 +409,7 @@ export async function sendMessage(content: string, systemPrompt: string = '') {
           chatStore.addToolResults(assistantMessage.id, toolResults);
 
           // Now send tool results back to LLM for final response
-          await continueConversationAfterTools(assistantMessage.id, toolResults, systemPrompt);
+          await continueConversationAfterTools(assistantMessage.id, toolResults, systemPrompt ?? '');
         } else {
           // No tool calls, just finish
           chatStore.finishStreaming(assistantMessage.id);
@@ -431,6 +438,10 @@ async function continueConversationAfterTools(
   toolResults: ToolResult[],
   systemPrompt: string
 ) {
+  // Resolve settings
+  let settings: any = {};
+  settingsStore.subscribe((s) => { settings = s; })();
+
   // Create a new assistant message for the final response
   const finalMessage = chatStore.addMessage({
     role: 'assistant',
@@ -477,11 +488,11 @@ async function continueConversationAfterTools(
   }
 
   const request: ChatCompletionRequest = {
-    model: 'default',
+    model: settings.model || 'default',
     messages: messagesWithTools,
-    temperature: 0.3,
-    top_p: 0.9,
-    max_tokens: 4096,
+    temperature: settings.temperature ?? 0.3,
+    top_p: settings.topP ?? 0.9,
+    max_tokens: settings.contextSize ?? 4096,
     stream: true,
     tools: availableTools,
     tool_choice: 'auto',
