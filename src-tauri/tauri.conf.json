@@ -52,7 +52,6 @@
   "plugins": {
     "shell": { "open": true },
     "fs": { "scope": ["$APPDATA/assistant/**", "$TEMP/assistant/**"] },
-    "process": { "scope": { "allowlist": ["python", "cmd", "powershell"] } },
-    "global-shortcut": {}
+    "process": { "scope": { "allowlist": ["python", "cmd", "powershell"] } }
   }
 }
