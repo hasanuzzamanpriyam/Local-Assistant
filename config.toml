@@ -19,3 +19,10 @@ hud_position = "top-center"
 [esc_guard]
 enabled = true
 fallback_shortcut = "Ctrl+Alt+Esc"
+
+[voice]
+enabled = true
+stt_model = "whisper-small"
+tts_voice = "en_US-amy-medium"
+vad_enabled = false
+push_to_talk = true
