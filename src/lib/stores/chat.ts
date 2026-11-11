@@ -432,6 +432,11 @@ export async function sendMessage(content: string, systemPrompt?: string) {
   }
 }
 
+// Send a voice message (transcript from STT)
+export async function sendVoiceMessage(text: string, systemPrompt?: string) {
+  return sendMessage(text, systemPrompt);
+}
+
 // Continue conversation after tool execution
 async function continueConversationAfterTools(
   assistantMessageId: string,
