@@ -72,24 +72,45 @@ impl LlamaServer {
 
     /// Find the llama-server binary from config path, common locations, or PATH
     fn find_llama_server(&self) -> Result<String> {
-        // 1. Check config path
+        // 1. Check config path - could be a file or a directory containing llama-server.exe
         if let Some(configured_path) = &self.config_llama_server_path {
-            if std::path::Path::new(configured_path).exists() {
+            let p = std::path::Path::new(configured_path);
+            if p.is_file() {
                 return Ok(configured_path.clone());
+            }
+            if p.is_dir() {
+                let exe_path = p.join("llama-server.exe");
+                if exe_path.is_file() {
+                    return Ok(exe_path.to_string_lossy().to_string());
+                }
             }
         }
 
-        // 2. Check common Windows locations
+        // 2. Check common Windows locations (file or directory)
         if cfg!(target_os = "windows") {
             let common_paths = [
                 "C:\\llama.cpp\\llama-server.exe",
                 "C:\\Program Files\\llama.cpp\\llama-server.exe",
                 "C:\\tools\\llama-server.exe",
+                "C:\\Users\\CT\\Desktop\\llama-b12289-bin-win-cpu-x64\\llama-server.exe",
                 "llama-server.exe",
             ];
             for path in &common_paths {
-                if std::path::Path::new(path).exists() {
+                if std::path::Path::new(path).is_file() {
                     return Ok(path.to_string());
+                }
+            }
+            // Also check directory-based paths
+            let common_dirs = [
+                "C:\\llama.cpp",
+                "C:\\Program Files\\llama.cpp",
+                "C:\\tools",
+                "C:\\Users\\CT\\Desktop\\llama-b12289-bin-win-cpu-x64",
+            ];
+            for dir in &common_dirs {
+                let exe_path = std::path::Path::new(dir).join("llama-server.exe");
+                if exe_path.is_file() {
+                    return Ok(exe_path.to_string_lossy().to_string());
                 }
             }
         }

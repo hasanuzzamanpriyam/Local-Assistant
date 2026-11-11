@@ -4,7 +4,7 @@ context_size = 4096
 threads = 8
 temperature = 0.3
 top_p = 0.9
-llama_server_path = ""
+llama_server_path = "C:\\Users\\CT\\Desktop\\llama-b12289-bin-win-cpu-x64"
 
 [sidecar]
 python = "python"
