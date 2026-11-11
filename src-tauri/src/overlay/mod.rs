@@ -2,7 +2,7 @@ pub mod window;
 pub mod shortcut;
 
 use crate::overlay::window::OverlayWindow;
-use crate::overlay::shortcut::GlobalShortcut;
+pub use crate::overlay::shortcut::GlobalShortcut;
 use anyhow::Result;
 use std::sync::{Arc, Mutex};
 

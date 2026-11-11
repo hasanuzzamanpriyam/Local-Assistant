@@ -2,7 +2,7 @@ use tauri::{AppHandle, WebviewWindow, WebviewWindowBuilder};
 use anyhow::Result;
 
 pub struct OverlayWindow {
-    window: Option<WebviewWindow>,
+    pub window: Option<WebviewWindow>,
 }
 
 impl OverlayWindow {

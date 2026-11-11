@@ -5,9 +5,11 @@ mod overlay;
 mod sidecar;
 
 use std::sync::Arc;
+use tauri::Manager;
 use crate::model::ModelManager;
 use crate::commands::shell::JobRegistry;
 use crate::sidecar::SidecarManager;
+use crate::overlay::{OverlayManager, GlobalShortcut};
 
 fn main() {
     let config = config::Config::load().expect("Failed to load config");
@@ -29,11 +31,33 @@ fn main() {
     let model_manager = Arc::new(ModelManager::new(config).expect("Failed to create ModelManager"));
     let job_registry = JobRegistry::new();
     let sidecar_manager = SidecarManager::new();
+    let overlay_manager = Arc::new(OverlayManager::new());
+    let global_shortcut = Arc::new(GlobalShortcut::new());
+
+    let overlay_clone = overlay_manager.clone();
+    let shortcut_handler = move || {
+        let _ = overlay_clone.hide();
+    };
+    global_shortcut.set_handler(Box::new(shortcut_handler));
 
     tauri::Builder::default()
         .manage(model_manager)
         .manage(job_registry)
         .manage(sidecar_manager)
+        .manage(overlay_manager.clone())
+        .manage(global_shortcut.clone())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .setup(move |app| {
+            let app_handle = app.app_handle();
+            if let Some(overlay_window) = app.get_webview_window("overlay") {
+                let window = overlay::window::OverlayWindow { window: Some(overlay_window) };
+                overlay_manager.set_window(window);
+            }
+            if let Err(e) = global_shortcut.register(app_handle) {
+                eprintln!("Failed to register global shortcut: {}", e);
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             commands::model::model_health,
             commands::model::model_list,
@@ -57,6 +81,8 @@ fn main() {
             commands::sidecar::sidecar_run_task,
             commands::sidecar::sidecar_stop_task,
             commands::sidecar::sidecar_send_command,
+            commands::overlay::overlay_show,
+            commands::overlay::overlay_hide,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
