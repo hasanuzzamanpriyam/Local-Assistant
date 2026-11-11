@@ -8,10 +8,13 @@
   import TaskInput from './lib/components/sidecar/TaskInput.svelte';
   import TaskFeed from './lib/components/sidecar/TaskFeed.svelte';
   import { modelHealth, modelStart } from './lib/api/llama';
+  import OverlayController from './lib/components/overlay/OverlayController.svelte';
+  import OverlayWindow from './lib/components/overlay/OverlayWindow.svelte';
 
   let isModelReady = $state(false);
   let isLoading = $state(true);
   let showSettings = $state(false);
+  let activeTaskId = $state<string | null>(null);
   let showSidecar = $state(false);
 
   // Check model health on mount
@@ -49,6 +52,14 @@
 
   function closeSettings() {
     showSettings = false;
+  }
+
+  function onTaskStarted(taskId: string) {
+    activeTaskId = taskId;
+  }
+
+  function onTaskStopped() {
+    activeTaskId = null;
   }
 
   function toggleSidecar() { showSidecar = !showSidecar; }
@@ -89,6 +100,9 @@
   </main>
 
   <Settings isOpen={showSettings} onClose={closeSettings} />
+
+  <OverlayController {activeTaskId} />
+  <OverlayWindow />
 
   {#if showSidecar}
     <div class="sidecar-panel">
