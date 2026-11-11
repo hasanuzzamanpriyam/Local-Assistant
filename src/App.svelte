@@ -3,11 +3,16 @@
   import { invoke } from '@tauri-apps/api/core';
   import Chat from './lib/components/chat/Chat.svelte';
   import Settings from './lib/components/settings/Settings.svelte';
+  import { sidecarStore } from './lib/stores/sidecar';
+  import SidecarStatus from './lib/components/sidecar/SidecarStatus.svelte';
+  import TaskInput from './lib/components/sidecar/TaskInput.svelte';
+  import TaskFeed from './lib/components/sidecar/TaskFeed.svelte';
   import { modelHealth, modelStart } from './lib/api/llama';
 
   let isModelReady = $state(false);
   let isLoading = $state(true);
   let showSettings = $state(false);
+  let showSidecar = $state(false);
 
   // Check model health on mount
   onMount(async () => {
@@ -45,6 +50,8 @@
   function closeSettings() {
     showSettings = false;
   }
+
+  function toggleSidecar() { showSidecar = !showSidecar; }
 </script>
 
 <div class="app">
@@ -52,6 +59,7 @@
     <div class="titlebar-drag" data-tauri-drag-region>Assistant</div>
     <div class="titlebar-buttons">
       <button class="settings-btn" onclick={openSettings} aria-label="Settings" title="Settings">⚙</button>
+      <button class="sidecar-btn" onclick={toggleSidecar} aria-label="Computer Control" title="Computer Control">🖥️</button>
       <button data-tauri-minimize>−</button>
       <button data-tauri-maximize>□</button>
       <button data-tauri-close>×</button>
@@ -81,6 +89,18 @@
   </main>
 
   <Settings isOpen={showSettings} onClose={closeSettings} />
+
+  {#if showSidecar}
+    <div class="sidecar-panel">
+      <div class="sidecar-header">
+        <h3>Computer Control</h3>
+        <button onclick={toggleSidecar} class="close-btn">×</button>
+      </div>
+      <SidecarStatus />
+      <TaskInput />
+      <TaskFeed />
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -152,4 +172,51 @@
   .retry-button:hover {
     background: var(--accent-hover);
   }
+
+  .sidecar-btn { font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .sidecar-panel {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    z-index: 1000;
+  }
+  .sidecar-panel > div {
+    background: var(--bg-elevated);
+    border-left: 1px solid var(--border);
+    width: 400px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.4);
+  }
+  .sidecar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidecar-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .close-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    font-size: 20px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .close-btn:hover { background: var(--bg-hover); color: var(--fg); }
 </style>
