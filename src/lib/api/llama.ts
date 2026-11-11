@@ -1,5 +1,16 @@
 import { invoke } from '@tauri-apps/api/core';
 
+// Extend Window interface for Tauri event system
+declare global {
+  interface Window {
+    __TAURI__: {
+      event: {
+        listen: (event: string, handler: (event: any) => void) => Promise<() => void>;
+      };
+    };
+  }
+}
+
 export interface ChatMessage {
   role: string;
   content: string;

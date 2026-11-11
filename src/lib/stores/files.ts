@@ -39,23 +39,25 @@ function buildFileTree(paths: string[]): FileEntry[] {
     let current: FileTreeNode = root;
     
     for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
+      const part = parts[i]!;
       const isLast = i === parts.length - 1;
       const fullPath = parts.slice(0, i + 1).join('/');
       
-      if (!current[part]) {
-        current[part] = {
+      let entry = current[part];
+      if (!entry) {
+        entry = {
           path: fullPath,
           name: part,
           isDirectory: !isLast,
           children: isLast ? undefined : [],
         };
+        current[part] = entry;
       }
       
-      if (!isLast && current[part].children) {
+      if (!isLast && entry.children) {
         // Convert children array to object for next iteration
         const childrenObj: FileTreeNode = {};
-        for (const child of current[part].children) {
+        for (const child of entry.children) {
           childrenObj[child.name] = child;
         }
         current = childrenObj;
