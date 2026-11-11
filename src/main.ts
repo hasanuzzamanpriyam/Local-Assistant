@@ -1,8 +1,8 @@
-import './styles/global.css';
+import { mount } from 'svelte';
 import App from './App.svelte';
 
-const app = new App({
-  target: document.getElementById('app')!,
+const app = mount(App, {
+  target: document.getElementById('app')!, // Ensure your index.html has a div with id="app"
 });
 
 export default app;
