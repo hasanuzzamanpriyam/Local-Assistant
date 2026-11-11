@@ -6,6 +6,7 @@ mod sidecar;
 use std::sync::Arc;
 use crate::model::ModelManager;
 use crate::commands::shell::JobRegistry;
+use crate::sidecar::SidecarManager;
 
 fn main() {
     let config = config::Config::load().expect("Failed to load config");
@@ -26,10 +27,12 @@ fn main() {
 
     let model_manager = Arc::new(ModelManager::new(config).expect("Failed to create ModelManager"));
     let job_registry = JobRegistry::new();
+    let sidecar_manager = SidecarManager::new();
 
     tauri::Builder::default()
         .manage(model_manager)
         .manage(job_registry)
+        .manage(sidecar_manager)
         .invoke_handler(tauri::generate_handler![
             commands::model::model_health,
             commands::model::model_list,
@@ -47,6 +50,12 @@ fn main() {
             commands::shell::shell_job_status,
             commands::shell::shell_job_list,
             commands::shell::shell_job_cleanup,
+            commands::sidecar::sidecar_status,
+            commands::sidecar::sidecar_start,
+            commands::sidecar::sidecar_stop,
+            commands::sidecar::sidecar_run_task,
+            commands::sidecar::sidecar_stop_task,
+            commands::sidecar::sidecar_send_command,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
