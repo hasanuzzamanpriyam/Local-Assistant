@@ -12,7 +12,7 @@ export interface Settings {
 
 // Default settings
 const DEFAULT_SETTINGS: Settings = {
-  model: 'Qwen2.5-3B-Instruct-Q4_K_M.gguf',
+  model: 'Qwen2.5-3B-Instruct-Q6_K.gguf',
   systemPrompt: 'You are a helpful AI assistant.',
   temperature: 0.3,
   topP: 0.9,

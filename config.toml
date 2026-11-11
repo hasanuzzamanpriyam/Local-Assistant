@@ -1,5 +1,5 @@
 [model]
-default = "Qwen2.5-3B-Instruct-Q4_K_M.gguf"
+default = "Qwen2.5-3B-Instruct-Q6_K.gguf"
 context_size = 4096
 threads = 8
 temperature = 0.3
