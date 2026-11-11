@@ -5,11 +5,20 @@
   let events: any[] = [];
   sidecarStore.subscribeEvents((evts) => { events = evts; })();
 
+  let { onTaskStarted, onTaskStopped }: { onTaskStarted?: (id: string) => void; onTaskStopped?: () => void } = $props();
+
   let unlisten: (() => void) | null = null;
 
   async function startListening() {
     unlisten = await sidecarStore.listen((event) => {
       events = [...events, event];
+
+      if (event.event === 'task_started' && event.id) {
+        onTaskStarted?.(event.id);
+      }
+      if ((event.event === 'task_complete' || event.event === 'task_stopped' || event.event === 'error') && event.id) {
+        onTaskStopped?.();
+      }
     });
   }
 

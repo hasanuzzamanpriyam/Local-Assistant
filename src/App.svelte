@@ -112,7 +112,7 @@
       </div>
       <SidecarStatus />
       <TaskInput />
-      <TaskFeed />
+      <TaskFeed onTaskStarted={onTaskStarted} onTaskStopped={onTaskStopped} />
     </div>
   {/if}
 </div>
