@@ -4,6 +4,7 @@ mod commands;
 
 use std::sync::Arc;
 use crate::model::ModelManager;
+use crate::commands::shell::JobRegistry;
 
 fn main() {
     let config = config::Config::load().expect("Failed to load config");
@@ -23,9 +24,11 @@ fn main() {
     std::fs::create_dir_all(&workspace_dir).expect("Failed to create workspace directory");
 
     let model_manager = Arc::new(ModelManager::new(config).expect("Failed to create ModelManager"));
+    let job_registry = JobRegistry::new();
 
     tauri::Builder::default()
         .manage(model_manager)
+        .manage(job_registry)
         .invoke_handler(tauri::generate_handler![
             commands::model::model_health,
             commands::model::model_list,
@@ -38,6 +41,11 @@ fn main() {
             commands::fs::fs_edit,
             commands::fs::fs_glob,
             commands::fs::fs_grep,
+            commands::shell::shell_exec,
+            commands::shell::shell_background,
+            commands::shell::shell_job_status,
+            commands::shell::shell_job_list,
+            commands::shell::shell_job_cleanup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
