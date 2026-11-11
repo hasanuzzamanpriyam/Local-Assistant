@@ -47,7 +47,7 @@
     background: var(--bg-elevated);
     border-top: 1px solid var(--border);
   }
-  .task-input input[type="text"] {
+  .task-input input {
     flex: 1;
     padding: 8px 12px;
     background: var(--bg);

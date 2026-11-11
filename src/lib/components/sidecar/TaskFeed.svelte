@@ -2,7 +2,7 @@
   import { sidecarStore } from '../../stores/sidecar';
   import ScreenshotViewer from './ScreenshotViewer.svelte';
 
-  let events: any[] = [];
+  let events = $state<any[]>([]);
   sidecarStore.subscribeEvents((evts) => { events = evts; })();
 
   let { onTaskStarted, onTaskStopped }: { onTaskStarted?: (id: string) => void; onTaskStopped?: () => void } = $props();
