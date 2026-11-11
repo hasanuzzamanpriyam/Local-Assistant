@@ -61,6 +61,7 @@ impl ModelManager {
             model_path,
             self.config.model.context_size,
             self.config.model.threads,
+            self.config.model.llama_server_path.clone(),
         ).await?;
         
         server.start().await?;

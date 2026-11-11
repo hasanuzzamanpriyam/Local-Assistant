@@ -17,6 +17,7 @@ pub struct ModelConfig {
     pub threads: u32,
     pub temperature: f32,
     pub top_p: f32,
+    pub llama_server_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,7 +78,8 @@ impl Default for Config {
                 context_size: 4096, 
                 threads: 8, 
                 temperature: 0.3, 
-                top_p: 0.9 
+                top_p: 0.9,
+                llama_server_path: None
             },
             sidecar: SidecarConfig { 
                 python: "python".into(), 

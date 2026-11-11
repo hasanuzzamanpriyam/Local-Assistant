@@ -17,6 +17,7 @@ pub struct LlamaServer {
     base_url: Url,
     child: Option<Child>,
     client: Client,
+    config_llama_server_path: Option<String>,
 }
 
 impl LlamaServer {
@@ -24,6 +25,7 @@ impl LlamaServer {
         model_path: PathBuf,
         context_size: u32,
         threads: u32,
+        config_llama_server_path: Option<String>,
     ) -> Result<Self> {
         let port = portpicker::pick_unused_port()
             .ok_or_else(|| anyhow::anyhow!("Failed to pick unused port"))?;
@@ -42,34 +44,58 @@ impl LlamaServer {
             base_url,
             child: None,
             client,
+            config_llama_server_path,
         })
     }
 
     pub async fn start(&mut self) -> Result<()> {
-        // Note: In production, this would use the llama.cpp server binary
-        // For now, we'll simulate the server start
-        // The actual llama.cpp binary is not bundled yet
+        // Find the llama-server binary
+        let llama_server_path = self.find_llama_server()?;
         
-        let mut cmd = Command::new("echo");
-        cmd.arg("llama.cpp server would start here")
-            .arg("--model").arg(self.model_path.to_string_lossy().to_string())
+        // Spawn the actual llama.cpp server binary
+        let mut cmd = Command::new(llama_server_path);
+        cmd.arg("-m").arg(self.model_path.to_string_lossy().to_string())
             .arg("--port").arg(self.port.to_string())
+            .arg("--host").arg("127.0.0.1")
             .arg("--ctx-size").arg(self.context_size.to_string())
             .arg("--threads").arg(self.threads.to_string())
-            .arg("--host").arg("127.0.0.1")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
-        // In real implementation, this would be:
-        // let child = cmd.spawn()?;
-        // self.child = Some(child);
-        
-        // For now, simulate by not actually spawning
-        // This is a placeholder until llama.cpp binary is bundled
-        
-        tracing::info!("LlamaServer would start on port {} with model {}", self.port, self.model_path.display());
+        let child = cmd.spawn()?;
+        self.child = Some(child);
+
+        tracing::info!("LlamaServer started on port {} with model {}", self.port, self.model_path.display());
         
         Ok(())
+    }
+
+    /// Find the llama-server binary from config path, common locations, or PATH
+    fn find_llama_server(&self) -> Result<String> {
+        // 1. Check config path
+        if let Some(configured_path) = &self.config_llama_server_path {
+            if std::path::Path::new(configured_path).exists() {
+                return Ok(configured_path.clone());
+            }
+        }
+
+        // 2. Check common Windows locations
+        if cfg!(target_os = "windows") {
+            let common_paths = [
+                "C:\\llama.cpp\\llama-server.exe",
+                "C:\\Program Files\\llama.cpp\\llama-server.exe",
+                "C:\\tools\\llama-server.exe",
+                "llama-server.exe",
+            ];
+            for path in &common_paths {
+                if std::path::Path::new(path).exists() {
+                    return Ok(path.to_string());
+                }
+            }
+        }
+
+        // 3. Try PATH
+        Ok("llama-server".to_string())
     }
 
     pub async fn wait_healthy(&self) -> Result<()> {
