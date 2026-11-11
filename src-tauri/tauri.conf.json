@@ -20,6 +20,21 @@
         "resizable": true,
         "decorations": false,
         "transparent": true
+      },
+      {
+        "label": "overlay",
+        "title": "Assistant Overlay",
+        "width": 1920,
+        "height": 1080,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false,
+        "visible": false
       }
     ],
     "security": {
@@ -37,6 +52,7 @@
   "plugins": {
     "shell": { "open": true },
     "fs": { "scope": ["$APPDATA/assistant/**", "$TEMP/assistant/**"] },
-    "process": { "scope": { "allowlist": ["python", "cmd", "powershell"] } }
+    "process": { "scope": { "allowlist": ["python", "cmd", "powershell"] } },
+    "global-shortcut": { "scope": ["all"] }
   }
 }
