@@ -144,4 +144,35 @@ impl ModelManager {
     pub fn models_dir(&self) -> &PathBuf {
         &self.models_dir
     }
+
+    /// Get remote models from the running llama.cpp server
+    #[allow(dead_code)]
+    pub async fn list_remote_models(&self) -> Vec<String> {
+        if let Some(client) = self.client.lock().await.as_ref() {
+            client.list_models().await.unwrap_or_default()
+        } else {
+            vec![]
+        }
+    }
+
+    /// Update the model config and restart server if running
+    #[allow(dead_code)]
+    pub async fn set_default_model(&self, model_name: String) -> Result<()> {
+        // Update config file
+        let mut config = Config::load()?;
+        config.model.default = model_name.clone();
+        config.save()?;
+        
+        // Note: We can't easily update the internal config since it's not mutable
+        // The config will be reloaded on next app start
+        // For now, we just update the file
+        
+        // Restart server with new model if running
+        if self.is_healthy().await {
+            self.stop_server().await?;
+            // The next start_server() call will use the new config from file
+        }
+        
+        Ok(())
+    }
 }

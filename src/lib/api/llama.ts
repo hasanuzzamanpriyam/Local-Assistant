@@ -116,12 +116,25 @@ export interface HealthResponse {
   healthy: boolean;
 }
 
+export interface ModelScanResult {
+  local: ModelInfo[];
+  remote: string[];
+}
+
 export async function modelHealth(): Promise<HealthResponse> {
   return invoke('model_health');
 }
 
 export async function modelList(): Promise<ModelInfo[]> {
   return invoke('model_list');
+}
+
+export async function modelScanLocal(): Promise<ModelScanResult> {
+  return invoke('model_scan_local');
+}
+
+export async function modelSetDefault(modelName: string): Promise<void> {
+  return invoke('model_set_default', { model_name: modelName });
 }
 
 export async function modelChat(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {

@@ -2,10 +2,12 @@
   import { onMount } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
   import Chat from './lib/components/chat/Chat.svelte';
+  import Settings from './lib/components/settings/Settings.svelte';
   import { modelHealth, modelStart } from './lib/api/llama';
 
   let isModelReady = $state(false);
   let isLoading = $state(true);
+  let showSettings = $state(false);
 
   // Check model health on mount
   onMount(async () => {
@@ -35,12 +37,21 @@
       isLoading = false;
     }
   }
+
+  function openSettings() {
+    showSettings = true;
+  }
+
+  function closeSettings() {
+    showSettings = false;
+  }
 </script>
 
 <div class="app">
   <header class="titlebar">
     <div class="titlebar-drag" data-tauri-drag-region>Assistant</div>
     <div class="titlebar-buttons">
+      <button class="settings-btn" onclick={openSettings} aria-label="Settings" title="Settings">⚙</button>
       <button data-tauri-minimize>−</button>
       <button data-tauri-maximize>□</button>
       <button data-tauri-close>×</button>
@@ -68,15 +79,19 @@
       <Chat />
     {/if}
   </main>
+
+  <Settings isOpen={showSettings} onClose={closeSettings} />
 </div>
 
 <style>
   .app { display: flex; flex-direction: column; height: 100vh; background: var(--bg); color: var(--fg); }
   .titlebar { display: flex; justify-content: space-between; align-items: center; height: 36px; padding: 0 12px; background: var(--bg-elevated); border-bottom: 1px solid var(--border); user-select: none; }
   .titlebar-drag { -webkit-app-region: drag; font-weight: 600; font-size: 13px; }
-  .titlebar-buttons { display: flex; gap: 4px; }
+  .titlebar-buttons { display: flex; gap: 4px; align-items: center; }
   .titlebar-buttons button { width: 28px; height: 28px; border: none; background: transparent; color: var(--fg); border-radius: 4px; cursor: pointer; }
   .titlebar-buttons button:hover { background: var(--bg-hover); }
+  .settings-btn { font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .settings-btn:hover { background: var(--bg-hover); color: var(--accent); }
   .content { flex: 1; overflow: hidden; position: relative; }
 
   .loading-overlay,
