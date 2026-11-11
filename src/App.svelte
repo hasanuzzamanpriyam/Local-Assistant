@@ -10,15 +10,21 @@
   import { modelHealth, modelStart } from './lib/api/llama';
   import OverlayController from './lib/components/overlay/OverlayController.svelte';
   import OverlayWindow from './lib/components/overlay/OverlayWindow.svelte';
+  import { settingsStore } from './lib/stores/settings';
+  import VoiceButton from './lib/components/voice/VoiceButton.svelte';
+  import VoiceStatus from './lib/components/voice/VoiceStatus.svelte';
+  import { sendVoiceMessage } from './lib/stores/chat';
 
   let isModelReady = $state(false);
   let isLoading = $state(true);
   let showSettings = $state(false);
   let activeTaskId = $state<string | null>(null);
   let showSidecar = $state(false);
+  let systemPrompt = $state('');
 
   // Check model health on mount
   onMount(async () => {
+    settingsStore.subscribe((s) => { systemPrompt = s.systemPrompt || ''; })();
     await checkModel();
   });
 
@@ -60,6 +66,10 @@
 
   function onTaskStopped() {
     activeTaskId = null;
+  }
+
+  function handleVoiceTranscript(text: string) {
+    sendVoiceMessage(text, systemPrompt);
   }
 
   function toggleSidecar() { showSidecar = !showSidecar; }
@@ -113,6 +123,8 @@
       <SidecarStatus />
       <TaskInput />
       <TaskFeed onTaskStarted={onTaskStarted} onTaskStopped={onTaskStopped} />
+      <VoiceStatus />
+      <VoiceButton onTranscript={handleVoiceTranscript} />
     </div>
   {/if}
 </div>

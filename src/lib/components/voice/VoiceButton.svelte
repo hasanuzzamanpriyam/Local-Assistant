@@ -9,6 +9,8 @@
   let isListening = $derived(voiceStore.isListening);
   let sttStatus = $derived(voiceStore.sttStatus);
 
+  let { onTranscript }: { onTranscript?: (text: string) => void } = $props();
+
   async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -31,6 +33,7 @@
         try {
           const result = await stt(base64, 'webm');
           voiceStore.setTranscript(result.text);
+          onTranscript?.(result.text);
           voiceStore.setSttStatus('ready');
         } catch (e) {
           console.error('STT failed:', e);
