@@ -28,13 +28,13 @@ fn main() {
         .join("workspace");
     std::fs::create_dir_all(&workspace_dir).expect("Failed to create workspace directory");
 
-    let model_manager = Arc::new(ModelManager::new(config).expect("Failed to create ModelManager"));
+    let model_manager = ModelManager::new(config).expect("Failed to create ModelManager");
     let job_registry = JobRegistry::new();
     let sidecar_manager = SidecarManager::new();
     let overlay_manager = Arc::new(OverlayManager::new());
     let global_shortcut = Arc::new(GlobalShortcut::new());
 
-    let overlay_clone = overlay_manager.clone();
+    let overlay_clone = Arc::clone(&overlay_manager);
     let shortcut_handler = move || {
         let _ = overlay_clone.hide();
     };
