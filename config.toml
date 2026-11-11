@@ -1,0 +1,21 @@
+[model]
+default = "Qwen2.5-3B-Instruct-Q4_K_M.gguf"
+context_size = 4096
+threads = 8
+temperature = 0.3
+top_p = 0.9
+
+[sidecar]
+python = "python"
+auto_start = true
+log_level = "INFO"
+
+[overlay]
+enabled = true
+aura_color = "#007AFF"
+comet_color = "#00D4FF"
+hud_position = "top-center"
+
+[esc_guard]
+enabled = true
+fallback_shortcut = "Ctrl+Alt+Esc"
