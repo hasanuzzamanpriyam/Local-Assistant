@@ -53,8 +53,12 @@ impl LlamaServer {
         let llama_server_path = self.find_llama_server()?;
         
         // Spawn the actual llama.cpp server binary
-        let mut cmd = Command::new(llama_server_path);
-        cmd.arg("-m").arg(self.model_path.to_string_lossy().to_string())
+        let llama_server_path = self.find_llama_server()?;
+        
+        // Spawn the actual llama.cpp server binary
+        let mut cmd = Command::new(&llama_server_path);
+        let model_path_str = self.model_path.to_string_lossy().to_string();
+        cmd.arg("-m").arg(&model_path_str)
             .arg("--port").arg(self.port.to_string())
             .arg("--host").arg("127.0.0.1")
             .arg("--ctx-size").arg(self.context_size.to_string())
@@ -62,6 +66,11 @@ impl LlamaServer {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
+        // Log the exact command for debugging
+        let cmd_debug = format!("{} -m \"{}\" --port {} --host 127.0.0.1 --ctx-size {} --threads {}", 
+            llama_server_path, model_path_str, self.port, self.context_size, self.threads);
+        tracing::info!("Starting llama-server: {}", cmd_debug);
+        
         let child = cmd.spawn()?;
         self.child = Some(child);
 
