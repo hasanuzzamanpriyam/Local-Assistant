@@ -1,15 +1,16 @@
 import { invoke } from '@tauri-apps/api/core';
+import { listen, emit } from '@tauri-apps/api/event';
 
 // Extend Window interface for Tauri event system
-declare global {
-  interface Window {
-    __TAURI__: {
-      event: {
-        listen: (event: string, handler: (event: any) => void) => Promise<() => void>;
-      };
-    };
-  }
-}
+// declare global {
+//   interface Window {
+//     __TAURI__: {
+//       event: {
+//         listen: (event: string, handler: (event: any) => void) => Promise<() => void>;
+//       };
+//     };
+//   }
+// }
 
 export interface ChatMessage {
   role: string;
@@ -134,7 +135,7 @@ export async function modelScanLocal(): Promise<ModelScanResult> {
 }
 
 export async function modelSetDefault(modelName: string): Promise<void> {
-  return invoke('model_set_default', { model_name: modelName });
+  return invoke('model_set_default', { request: { model_name: modelName } });
 }
 
 export async function modelChat(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
@@ -149,15 +150,15 @@ export async function modelChatStream(
 ): Promise<() => void> {
   // For streaming, we'll use the event system
   // The actual streaming is handled by the backend emitting events
-  const unlistenChunk = await window.__TAURI__.event.listen('model-chat-chunk', (event) => {
+  const unlistenChunk = await listen('model-chat-chunk', (event) => {
     onChunk(event.payload as ChatCompletionChunk);
   });
   
-  const unlistenDone = await window.__TAURI__.event.listen('model-chat-done', () => {
+  const unlistenDone = await listen('model-chat-done', () => {
     onDone();
   });
   
-  const unlistenError = await window.__TAURI__.event.listen('model-chat-error', (event) => {
+  const unlistenError = await listen('model-chat-error', (event) => {
     onError(new Error(event.payload as string));
   });
   

@@ -1,5 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 
 export interface SidecarStatus {
   running: boolean;
@@ -66,14 +67,14 @@ function createSidecarStore() {
     },
 
     async listen(callback: (event: TaskEvent) => void): Promise<() => void> {
-      // Guard: Tauri __TAURI__ API may not be available in all contexts
-      if (typeof window === 'undefined' || !(window as any).__TAURI__) {
+      try {
+        const unlisten = await listen('sidecar-event', (e) => {
+          callback(e.payload as TaskEvent);
+        });
+        return unlisten;
+      } catch {
         return () => {};
       }
-      const unlisten = await window.__TAURI__.event.listen('sidecar-event', (e) => {
-        callback(e.payload as TaskEvent);
-      });
-      return unlisten;
     },
   };
 }
