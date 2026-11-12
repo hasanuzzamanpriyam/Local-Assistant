@@ -287,6 +287,7 @@ export async function executeToolCall(toolCall: ToolCall): Promise<ToolResult> {
 
 // Send a message and handle streaming response with tool execution loop
 export async function sendMessage(content: string, systemPrompt?: string) {
+  console.log('[sendMessage] Sending message:', content);
   // Resolve settings (use provided systemPrompt, fall back to store)
   let settings: any = {};
   settingsStore.subscribe((s) => { settings = s; })();
@@ -296,6 +297,7 @@ export async function sendMessage(content: string, systemPrompt?: string) {
     role: 'user',
     content,
   });
+  console.log('[sendMessage] User message added:', userMessage.id, 'content:', content);
 
   // Create assistant message placeholder
   const assistantMessage = chatStore.addMessage({
@@ -303,6 +305,7 @@ export async function sendMessage(content: string, systemPrompt?: string) {
     content: '',
     isStreaming: true,
   });
+  console.log('[sendMessage] Assistant message created:', assistantMessage.id);
 
   // Prepare messages for LLM
   const messages = chatStore.getLLMMessages();
@@ -348,6 +351,7 @@ export async function sendMessage(content: string, systemPrompt?: string) {
         if (delta.content) {
           accumulatedContent += delta.content;
           chatStore.appendToMessage(assistantMessage.id, delta.content);
+          console.log('[sendMessage] Chunk received:', delta.content);
         }
 
         // Handle tool calls streaming

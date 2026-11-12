@@ -150,28 +150,43 @@ export async function modelChatStream(
 ): Promise<() => void> {
   // For streaming, we'll use the event system
   // The actual streaming is handled by the backend emitting events
-  const unlistenChunk = await listen('model-chat-chunk', (event) => {
-    onChunk(event.payload as ChatCompletionChunk);
-  });
+  let unlistenChunk: (() => void) | null = null;
+  let unlistenDone: (() => void) | null = null;
+  let unlistenError: (() => void) | null = null;
   
-  const unlistenDone = await listen('model-chat-done', () => {
-    onDone();
-  });
-  
-  const unlistenError = await listen('model-chat-error', (event) => {
-    onError(new Error(event.payload as string));
-  });
+  try {
+    unlistenChunk = await listen('model-chat-chunk', (event) => {
+      try {
+        onChunk(event.payload as ChatCompletionChunk);
+      } catch (e) {
+        console.error('Error processing chunk:', e);
+      }
+    });
+    
+    unlistenDone = await listen('model-chat-done', () => {
+      onDone();
+    });
+    
+    unlistenError = await listen('model-chat-error', (event) => {
+      onError(new Error(event.payload as string));
+    });
+  } catch (e) {
+    console.error('Failed to set up event listeners:', e);
+    onError(new Error(`Failed to set up event listeners: ${e}`));
+    return () => {};
+  }
   
   // Start the stream
   invoke('model_chat_stream', { request }).catch((err) => {
+    console.error('model_chat_stream invoke error:', err);
     onError(new Error(err));
   });
   
   // Return cleanup function
   return () => {
-    unlistenChunk();
-    unlistenDone();
-    unlistenError();
+    unlistenChunk?.();
+    unlistenDone?.();
+    unlistenError?.();
   };
 }
 

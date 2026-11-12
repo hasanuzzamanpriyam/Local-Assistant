@@ -72,7 +72,13 @@
     <span class="message-time">{formatTime(message.timestamp)}</span>
   </div>
   
-  <div class="message-content" innerHTML={renderMarkdown(message.content)}></div>
+  <div class="message-content" style="color: var(--fg); min-height: 1.5em;">
+    {#if message.content}
+      {@html renderMarkdown(message.content)}
+    {:else}
+      <span class="empty-content-placeholder">...</span>
+    {/if}
+  </div>
   
   {#if message.tool_calls && message.tool_calls.length > 0}
     <ToolCallDisplay 
