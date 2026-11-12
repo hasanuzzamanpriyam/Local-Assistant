@@ -52,29 +52,37 @@ impl LlamaServer {
         // Find the llama-server binary
         let llama_server_path = self.find_llama_server()?;
         
-        // Spawn the actual llama.cpp server binary
-        let mut cmd = Command::new(&llama_server_path);
+        // Get model path
         let model_path_str = self.model_path.to_string_lossy().to_string();
+        
+        // Build the exact command that works
+        let mut cmd = Command::new(&llama_server_path);
         cmd.arg("-m").arg(&model_path_str)
             .arg("--port").arg(self.port.to_string())
             .arg("--host").arg("127.0.0.1")
             .arg("--ctx-size").arg(self.context_size.to_string())
             .arg("--threads").arg(self.threads.to_string())
-            // Explicit model loading flags
+            // Critical: remove --mlock as it causes model loading to fail
             .arg("--n-gpu-layers").arg("0")
-            .arg("--mlock")
+            // Note: --mlock REMOVED - causes model loading to fail
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
         // Log the exact command for debugging
-        let cmd_debug = format!("{} -m \"{}\" --port {} --host 127.0.0.1 --ctx-size {} --threads {} --n-gpu-layers 0 --mlock", 
+        let cmd_debug = format!("{} -m \"{}\" --port {} --host 127.0.0.1 --ctx-size {} --threads {} --n-gpu-layers 0", 
             llama_server_path, model_path_str, self.port, self.context_size, self.threads);
         tracing::info!("Starting llama-server: {}", cmd_debug);
+        
+        // EXPLICIT DEBUG: Print before spawn
+        eprintln!("[LlamaServer] Starting llama-server with command: {}", cmd_debug);
+        eprintln!("[LlamaServer] Model path: {}", model_path_str);
+        eprintln!("[LlamaServer] llama-server path: {}", llama_server_path);
         
         let child = cmd.spawn()?;
         self.child = Some(child);
 
         tracing::info!("LlamaServer started on port {} with model {}", self.port, self.model_path.display());
+        eprintln!("[LlamaServer] Spawned successfully, waiting for health check...");
         
         Ok(())
     }
