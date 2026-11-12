@@ -122,7 +122,7 @@ impl LlamaServer {
     }
 
     pub async fn wait_healthy(&self) -> Result<()> {
-        let max_wait = Duration::from_secs(15);
+        let max_wait = Duration::from_secs(120);
         let interval = Duration::from_millis(500);
         
         let start = std::time::Instant::now();
@@ -134,7 +134,7 @@ impl LlamaServer {
             sleep(interval).await;
         }
         
-        Err(anyhow::anyhow!("Health check timeout after 15s"))
+        Err(anyhow::anyhow!("Health check timeout after 120s"))
     }
 
     pub async fn health_check(&self) -> Result<bool> {

@@ -21,6 +21,9 @@
   let activeTaskId = $state<string | null>(null);
   let showSidecar = $state(false);
   let systemPrompt = $state('');
+  let healthCheckAttempts = $state(0);
+  const MAX_HEALTH_CHECK_ATTEMPTS = 24; // 24 * 5s = 120 seconds
+  const HEALTH_CHECK_INTERVAL_MS = 5000;
 
   // Check model health on mount
   onMount(async () => {
@@ -31,7 +34,8 @@
   async function checkModel() {
     isLoading = true;
     isModelReady = false;
-    
+    healthCheckAttempts = 0;
+
     try {
       const health = await modelHealth();
       if (health.healthy) {
@@ -39,10 +43,8 @@
       } else {
         // Try to start the model
         await modelStart();
-        // Wait a bit for startup
-        await new Promise(r => setTimeout(r, 2000));
-        const health2 = await modelHealth();
-        isModelReady = health2.healthy;
+        // Poll with longer timeout
+        await pollModelHealth();
       }
     } catch (error) {
       console.error('Model check failed:', error);
@@ -50,6 +52,29 @@
     } finally {
       isLoading = false;
     }
+  }
+
+  async function pollModelHealth() {
+    const interval = setInterval(async () => {
+      healthCheckAttempts++;
+
+      try {
+        const health = await modelHealth();
+        if (health.healthy) {
+          clearInterval(interval);
+          isModelReady = true;
+          return;
+        }
+      } catch (e) {
+        console.warn('Health check error:', e);
+      }
+
+      // Stop after max attempts (120 seconds total)
+      if (healthCheckAttempts >= MAX_HEALTH_CHECK_ATTEMPTS) {
+        clearInterval(interval);
+        console.error('Model health check timeout after', MAX_HEALTH_CHECK_ATTEMPTS * 5, 'seconds');
+      }
+    }, 5000); // Poll every 5 seconds
   }
 
   function openSettings() {
@@ -86,7 +111,7 @@
       <button data-tauri-close>×</button>
     </div>
   </header>
-  
+
   <main class="content">
     {#if isLoading}
       <div class="loading-overlay">
