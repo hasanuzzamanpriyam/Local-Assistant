@@ -88,6 +88,39 @@ impl SidecarManager {
         let pid = cmd.id();
         let stdin = cmd.stdin.take().unwrap();
         let stdout = cmd.stdout.take().unwrap();
+        let stderr = cmd.stderr.take().unwrap();
+
+        // Spawn stdout reader thread
+        thread::spawn(move || {
+            let reader = BufReader::new(stdout);
+            for line in reader.lines() {
+                match line {
+                    Ok(line) => {
+                        println!("[sidecar-stdout] {}", line);
+                    }
+                    Err(e) => {
+                        eprintln!("[sidecar-stdout] Error reading: {}", e);
+                    }
+                }
+            }
+        });
+
+        // Spawn stderr reader thread
+        thread::spawn(move || {
+            let reader = BufReader::new(stderr);
+            for line in reader.lines() {
+                match line {
+                    Ok(line) => {
+                        eprintln!("[sidecar-stderr] {}", line);
+                    }
+                    Err(e) => {
+                        eprintln!("[sidecar-stderr] Error reading: {}", e);
+                    }
+                }
+            }
+        });
+
+        let stdin = cmd.stdin.take().unwrap();
 
         *self.child.lock().unwrap() = Some(cmd);
         *self.stdin.lock().unwrap() = Some(stdin);
@@ -120,5 +153,16 @@ impl SidecarManager {
 impl Default for SidecarManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sidecar_manager_creates() {
+        let manager = SidecarManager::new();
+        assert!(!manager.is_running());
     }
 }
