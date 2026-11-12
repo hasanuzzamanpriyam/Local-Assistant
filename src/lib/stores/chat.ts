@@ -5,6 +5,81 @@ import { fsRead, fsWrite, fsEdit, fsGlob, fsGrep } from '../api/fs';
 import { shellExec } from '../api/shell';
 import { settingsStore } from './settings';
 
+/**
+ * Sanitize messages array for API compatibility.
+ * Ensures:
+ * 1. No consecutive messages with the same role
+ * 2. Removes empty assistant messages at the end
+ * 3. Alternates properly between roles
+ * 4. Tool messages have required tool_call_id
+ */
+function sanitizeMessages(messages: ChatMessage[]): ChatMessage[] {
+  if (messages.length === 0) return messages;
+
+  const sanitized: ChatMessage[] = [];
+  
+  for (const msg of messages) {
+    // Skip empty assistant messages (placeholders for streaming)
+    if (msg.role === 'assistant' && !msg.content && !msg.tool_calls) {
+      continue;
+    }
+    
+    // Skip empty system messages
+    if (msg.role === 'system' && !msg.content) {
+      continue;
+    }
+    
+    // Skip empty user messages
+    if (msg.role === 'user' && !msg.content) {
+      continue;
+    }
+    
+    // For tool messages, ensure tool_call_id is present
+    if (msg.role === 'tool') {
+      if (!msg.tool_call_id) {
+        console.warn('[sanitizeMessages] Skipping tool message without tool_call_id:', msg);
+        continue;
+      }
+    }
+    
+    // Prevent consecutive messages with same role
+    const lastMsg = sanitized.length > 0 ? sanitized[sanitized.length - 1] : null;
+    if (lastMsg && lastMsg.role === msg.role) {
+      // Merge consecutive messages with same role
+      if (msg.role === 'assistant' && msg.tool_calls && lastMsg.tool_calls) {
+        // Merge tool calls
+        lastMsg.tool_calls = [...(lastMsg.tool_calls || []), ...(msg.tool_calls || [])];
+        if (msg.content) {
+          lastMsg.content = (lastMsg.content || '') + (lastMsg.content ? '\n\n' : '') + msg.content;
+        }
+        continue;
+      } else if (msg.role === 'user' || msg.role === 'assistant') {
+        // Merge consecutive user or assistant messages
+        if (msg.content) {
+          lastMsg.content = (lastMsg.content || '') + (lastMsg.content ? '\n\n' : '') + msg.content;
+        }
+        if (msg.tool_calls && msg.tool_calls.length > 0) {
+          lastMsg.tool_calls = [...(lastMsg.tool_calls || []), ...(msg.tool_calls || [])];
+        }
+        continue;
+      }
+    }
+    
+    sanitized.push({ ...msg });
+  }
+  
+  // Ensure the last message is not an empty assistant message
+  if (sanitized.length > 0) {
+    const lastIdx = sanitized.length - 1;
+    const lastMsg = sanitized[lastIdx];
+    if (lastMsg && lastMsg.role === 'assistant' && !lastMsg.content && !lastMsg.tool_calls) {
+      sanitized.pop();
+    }
+  }
+  
+  return sanitized;
+}
+
 const STORAGE_KEY = 'assistant_chat_history';
 const MAX_MESSAGES = 100;
 
@@ -318,10 +393,13 @@ export async function sendMessage(content: string, systemPrompt?: string) {
     requestMessages.push({ role: 'system', content: resolvedSystemPrompt });
   }
   requestMessages.push(...messages);
-
+  
+  // Sanitize messages to prevent consecutive same-role messages
+  const sanitizedMessages = sanitizeMessages(requestMessages);
+  
   const request: ChatCompletionRequest = {
     model: settings.model || 'default',
-    messages: requestMessages,
+    messages: sanitizedMessages,
     temperature: settings.temperature ?? 0.3,
     top_p: settings.topP ?? 0.9,
     max_tokens: settings.contextSize ?? 4096,
@@ -498,7 +576,7 @@ async function continueConversationAfterTools(
 
   const request: ChatCompletionRequest = {
     model: settings.model || 'default',
-    messages: messagesWithTools,
+    messages: sanitizeMessages(messagesWithTools),
     temperature: settings.temperature ?? 0.3,
     top_p: settings.topP ?? 0.9,
     max_tokens: settings.contextSize ?? 4096,
