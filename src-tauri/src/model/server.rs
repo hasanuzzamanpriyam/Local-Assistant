@@ -53,9 +53,6 @@ impl LlamaServer {
         let llama_server_path = self.find_llama_server()?;
         
         // Spawn the actual llama.cpp server binary
-        let llama_server_path = self.find_llama_server()?;
-        
-        // Spawn the actual llama.cpp server binary
         let mut cmd = Command::new(&llama_server_path);
         let model_path_str = self.model_path.to_string_lossy().to_string();
         cmd.arg("-m").arg(&model_path_str)
@@ -63,11 +60,14 @@ impl LlamaServer {
             .arg("--host").arg("127.0.0.1")
             .arg("--ctx-size").arg(self.context_size.to_string())
             .arg("--threads").arg(self.threads.to_string())
+            // Explicit model loading flags
+            .arg("--n-gpu-layers").arg("0")
+            .arg("--mlock")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
         // Log the exact command for debugging
-        let cmd_debug = format!("{} -m \"{}\" --port {} --host 127.0.0.1 --ctx-size {} --threads {}", 
+        let cmd_debug = format!("{} -m \"{}\" --port {} --host 127.0.0.1 --ctx-size {} --threads {} --n-gpu-layers 0 --mlock", 
             llama_server_path, model_path_str, self.port, self.context_size, self.threads);
         tracing::info!("Starting llama-server: {}", cmd_debug);
         
