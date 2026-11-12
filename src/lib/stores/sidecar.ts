@@ -68,7 +68,6 @@ function createSidecarStore() {
     async listen(callback: (event: TaskEvent) => void): Promise<() => void> {
       // Guard: Tauri __TAURI__ API may not be available in all contexts
       if (typeof window === 'undefined' || !(window as any).__TAURI__) {
-        console.warn('Tauri __TAURI__ API not available');
         return () => {};
       }
       const unlisten = await window.__TAURI__.event.listen('sidecar-event', (e) => {

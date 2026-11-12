@@ -1,6 +1,5 @@
 :root {
-  --bg: rgba(13, 13, 13, 0.85);
-  /* Changed from #0d0d0d */
+  --bg: #0d0d0d;
   --bg-elevated: #141414;
   --bg-hover: #1e1e1e;
   --fg: #e8e8e8;

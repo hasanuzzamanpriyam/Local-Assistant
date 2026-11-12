@@ -12,7 +12,7 @@ body,
 #app {
     height: 100%;
     margin: 0;
-    background: transparent;
+    background: var(--bg);
 }
 
 body {
@@ -21,8 +21,6 @@ body {
     color: var(--fg);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
 }
 
 ::selection {
