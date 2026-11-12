@@ -6,7 +6,6 @@ use tokio::time::{sleep, timeout};
 use reqwest::Client;
 use url::Url;
 use anyhow::Result;
-use portpicker;
 
 #[derive(Debug)]
 pub struct LlamaServer {
@@ -21,14 +20,16 @@ pub struct LlamaServer {
 }
 
 impl LlamaServer {
+    // Fixed port for llama-server (standard llama.cpp port)
+    const LLAMA_SERVER_PORT: u16 = 11434;
+
     pub async fn new(
         model_path: PathBuf,
         context_size: u32,
         threads: u32,
         config_llama_server_path: Option<String>,
     ) -> Result<Self> {
-        let port = portpicker::pick_unused_port()
-            .ok_or_else(|| anyhow::anyhow!("Failed to pick unused port"))?;
+        let port = Self::LLAMA_SERVER_PORT;
         
         let base_url = Url::parse(&format!("http://127.0.0.1:{}/v1", port))?;
         
@@ -77,6 +78,7 @@ impl LlamaServer {
         eprintln!("[LlamaServer] Starting llama-server with command: {}", cmd_debug);
         eprintln!("[LlamaServer] Model path: {}", model_path_str);
         eprintln!("[LlamaServer] llama-server path: {}", llama_server_path);
+        eprintln!("[LlamaServer] Using fixed port: {}", self.port);
         
         let child = cmd.spawn()?;
         self.child = Some(child);
